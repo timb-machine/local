@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# $Id: lbb-add.pl,v 1.1.1.1 2013-07-02 23:05:56 timb Exp $
+# $Id: lbb-add.pl,v 1.2 2013-07-02 23:09:12 timb Exp $
 
 =head1 NAME
 

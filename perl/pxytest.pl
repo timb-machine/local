@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# $Id: pxytest.pl,v 1.1.1.1 2013-07-02 23:05:57 timb Exp $
+# $Id: pxytest.pl,v 1.2 2013-07-02 23:09:12 timb Exp $
 #
 # pxytest - test remote system for unsecured mail proxies
 # POD documentation embedded at end.  View with:  perldoc pxytest
@@ -11,7 +11,7 @@
 # <chip@unicom.com>
 #
 
-'$Revision: 1.1.1.1 $' =~ m!Revision: (\d+(\.\d+)+) !
+'$Revision: 1.2 $' =~ m!Revision: (\d+(\.\d+)+) !
 	or die "$0: cannot determine version number";
 my $VERSION = $1;
 
@@ -1839,6 +1839,6 @@ I found the following programs helpful in developing this utility.
  Unicom Systems Development
  <chip@unicom.com>
 
- $Id: pxytest.pl,v 1.1.1.1 2013-07-02 23:05:57 timb Exp $
+ $Id: pxytest.pl,v 1.2 2013-07-02 23:09:12 timb Exp $
  See <http://www.unicom.com/sw/pxytest/> for latest version.
 

@@ -5,7 +5,7 @@
 #
 # Initial cruft: jwa@jammed.com  5 Oct 2000
 #
-# $Id: tnscmd10g.pl,v 1.1.1.1 2013-07-02 23:05:56 timb Exp $
+# $Id: tnscmd10g.pl,v 1.2 2013-07-02 23:09:12 timb Exp $
 #
 # see also: 
 #    http://www.jammed.com/~jwa/hacks/security/tnscmd/tnscmd-doc.html
@@ -16,6 +16,9 @@
 # GPL'd, of course.  http://www.gnu.org/copyleft/gpl.html
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.1.1.1  2013/07/02 23:05:56  timb
+# Initial import into CVS
+#
 # Revision 1.3  2001/04/26 06:45:48  jwa
 # typo in url.  whoops.
 #

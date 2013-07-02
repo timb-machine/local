@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Header: /var/lib/cvsd/var/lib/cvsd/local/perl/ike-fuck.pl,v 1.1.1.1 2013-07-02 23:05:57 timb Exp $
+# $Header: /var/lib/cvsd/var/lib/cvsd/local/perl/ike-fuck.pl,v 1.2 2013-07-02 23:09:12 timb Exp $
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:

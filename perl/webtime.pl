@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 #
-# $Id: webtime.pl,v 1.1.1.1 2013-07-02 23:05:57 timb Exp $
+# $Id: webtime.pl,v 1.2 2013-07-02 23:09:12 timb Exp $
 # 
 # Sript to grab the time from a web server, compare it to the local
 # time and print out the difference.  Has 2 uses:
@@ -24,6 +24,9 @@
 # Change Log
 # ----------
 # $Log: not supported by cvs2svn $
+# Revision 1.1.1.1  2013/07/02 23:05:57  timb
+# Initial import into CVS
+#
 # Revision 1.3  2005/11/15 10:10:38  ml
 # Bug fix: Now error for HTTP as well has HTTPS when server is unreachable.
 #
@@ -37,7 +40,7 @@ use strict;
 use LWP;
 use Date::Manip;
 
-my $version = '$Id: webtime.pl,v 1.1.1.1 2013-07-02 23:05:57 timb Exp $';
+my $version = '$Id: webtime.pl,v 1.2 2013-07-02 23:09:12 timb Exp $';
 my $usage = "Usage: $0 url [count]
 
 Determines if a web server's clock is accurate
