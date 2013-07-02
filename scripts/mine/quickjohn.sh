@@ -1,0 +1,22 @@
+#!/bin/sh
+NAME="$1"
+MINLENGTH="$2"
+PASSWORDS="$3"
+DICT="$4"
+JOHN="$PWD"
+export JOHN
+cat /etc/john/john.conf | sed "s/MinLen = ./MinLen = $MINLENGTH/g" > "$JOHN/john.conf"
+cat "$DICT" > "$JOHN/password.lst"
+cat /usr/share/john/password.lst >> "$JOHN/password.lst"
+echo "admin/single"
+sudo john -session:"$NAME.1" -users:Administrator,root -single "$PASSWORDS"
+echo "admin/words"
+sudo john -session:"$NAME.2" -users:Administrator,root -wordlist:"$JOHN/password.lst" -rules "$PASSWORDS"
+echo "shared salts/single"
+sudo john -session:"$NAME.3" -salts:2 -single "$PASSWORDS"
+echo "shared salts/wordlist"
+sudo john -session:"$NAME.4" -salts:2 -wordlist:"$JOHN/password.lst" -rules "$PASSWORDS"
+echo "all/wordlist"
+sudo john -session:"$NAME.5" -wordlist:"$JOHN/password.lst" -rules "$PASSWORDS"
+echo "all/incremental"
+sudo john -session:"$NAME.6" -incremental:All $PASSWORDS
