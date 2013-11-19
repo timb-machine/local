@@ -11,4 +11,4 @@ do
 	fi
 	gidpattern="$gidpattern ( -group $gid -perm -g+r )"
 done
-find / \( ! -type l \) -a \( ! -user "$uid" \) -a \( $gidpattern -o \( -perm -o+r \) \) -ls 2>/dev/null
+find / \( ! -type l \) -a \( ! -user "$uid" \) -a \( $gidpattern -o \( -perm -o+r \) \) -ls 2> /dev/null
