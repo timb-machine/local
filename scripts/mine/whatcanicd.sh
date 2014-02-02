@@ -1,8 +1,6 @@
 #!/bin/sh
-
 uid="`id -u`"
 gids="`id -g` `id -G`"
-
 for gid in $gids
 do
 	gidpattern="$gidpattern -o ( -group $gid -perm -g+x )"

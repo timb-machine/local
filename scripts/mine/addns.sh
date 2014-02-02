@@ -1,15 +1,12 @@
 #!/bin/sh
-
 DOMAIN="$1"
 DNSSERVER="$2"
-
 if [ -z "$DOMAIN" ]
 then
 	printf "extracting DNS domain\n"
 	DOMAIN="`dig +short "@$DNSSERVER" soa 255.in-addr.arpa | awk '{print $1}' | cut -f 2- -d"."`"
 	printf "domain is: $DOMAIN\n"
 fi
-
 sites() {
 	domain="$1"
 	dnsserver="$2"
