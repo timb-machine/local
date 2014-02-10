@@ -1,53 +1,86 @@
 #!/bin/sh
-BINFILENAME="$1"
-OUTFILENAME="$2"
+# TODO functionise the code
+
 # decrypt binary
-# UNIMPLEMENTED
+DYLD_INSERT_LIBRARIES=~/testing/dumpdecrypted/dumpdecrypted.dylib $1
+binaryfilename=`basename $1`.decrypted
 # hash
-find "`dirname "$BINFILENAME"`/.." -type f | while read line
+find `dirname $1`/.. -type f | while read line
 do
 	md5sum $line
 	sha1sum $line
-done | tee "$OUTFILENAME.hash"
+done | tee $2.hash
 # plist
-find "`dirname "$BINFILENAME"`/.." -name "*.plist" | while read line
+find `dirname $1`/.. -iname "*.plist" | while read line
 do
 	echo $line
 	plutil show $line
-done | tee "$OUTFILENAME.plist"
+done | tee $2.plist
+# plist minimum OS
+find `dirname $1`/.. -iname "*.plist" | while read line
+do
+	echo $line
+	plutil show $line | grep -i MinimumOS
+done | tee $2.plist_minimum_OS
+# plist URL handlers
+find `dirname $1`/.. -iname "*.plist" | while read line
+do
+	echo $line
+	plutil show $line | grep -i CFBundleURLTypes
+done | tee $2.plist_URL_handlers
 # sandbox
+find `dirname $1`/.. -iname "*.sb" | while read line
+do
+	echo $line
+	cat $line
+done | tee $2.sandbox
+# entitlements
+ldid -e $binaryfilename | tee $2.entitlements
+find `dirname $1`/.. -name Entitlements.plist | while read line
+do
+	echo $line
+	plutil show $line
+done | tee -a $2.entitlements
 # format
-otool -f "$BINFILENAME" | tee "$OUTFILENAME.format"
+otool -f $binaryfilename | tee $2.format
 # dependencies
-otool -L "$BINFILENAME" | tee "$OUTFILENAME.dependencies"
+otool -L $binaryfilename | tee $2.dependencies
 # load commands
-otool -l "$BINFILENAME" | tee "$OUTFILENAME.load_commands"
+otool -l $binaryfilename | tee $2.load_commands
+# bundled libraries
+find `dirname $1` -iname "*.dll" | tee $2.bundled_libraries
+find `dirname $1` -iname "*.so" | tee -a $2.bundled_libraries
 # ARC
-otool -Iv "$BINFILENAME" | egrep " objc release| objc_autorelease| objc_storeStrong| _objc_retain" | tee "$OUTFILENAME.ARC"
+otool -Iv $binaryfilename | egrep -i " objc release| objc_autorelease| objc_storeStrong| _objc_retain" | tee $2.ARC
 # PIE
-otool -hv "$BINFILENAME" | grep PIE | tee "$OUTFILENAME.PIE"
+otool -hv $binaryfilename | grep -i PIE | tee $2.PIE
 # SSP
-otool -Iv "$BINFILENAME" | grep stack | tee "$OUTFILENAME.SSP"
+otool -Iv $binaryfilename | grep -i stack | tee $2.SSP
 # class dump
-mkdir "$OUTFILENAME.class_dump"
-class-dump "$BINFILENAME" -H -o "$OUTFILENAME.class_dump"
+mkdir $2.class_dump
+class-dump $binaryfilename -H -o $2.class_dump
 # SDL
-otool -Iv "$BINFILENAME" | egrep "alloca|gets|memcpy|scanf|sprintf|sscanf|strcat|StrCat|strcpy|StrCpy|strlen|StrLen|strncat|StrNCat|strncpy|StrNCpy|strtok|swprintf|vsnprintf|vsprintf|vswprintf|wcscat|wcscpy|wcslen|wcsncat|wcsncpy|wcstok|wmemcpy" | tee "$OUTFILENAME.SDL"
+otool -Iv $binaryfilename | egrep -i "alloca|gets|memcpy|scanf|sprintf|sscanf|strcat|StrCat|strcpy|StrCpy|strlen|StrLen|strncat|StrNCat|strncpy|StrNCpy|strtok|swprintf|vsnprintf|vsprintf|vswprintf|wcscat|wcscpy|wcslen|wcsncat|wcsncpy|wcstok|wmemcpy" | tee $2.SDL
 # crypto
-otool -Iv "$BINFILENAME" | egrep -i "des|aes|rsa|sha|md5|hash|mac|cbc|ebc|cipher|cert|random|ssl" | tee "$OUTFILENAME.crypto"
-strings "$BINFILENAME" | egrep -i "des|aes|rsa|sha|md5|hash|mac|cbc|ebc|cipher|cert|random|ssl" | tee -a "$OUTFILENAME.crypto"
-# webview
-otool -Iv "$BINFILENAME" | egrep -i "webview" | tee "$OUTFILENAME.webview"
-strings "$BINFILENAME" | egrep -i "webview" | tee -a "$OUTFILENAME.webview"
-otool -Iv "$BINFILENAME" | egrep -i "shouldStartLoadWithRequest" | tee "$OUTFILENAME.webview"
-strings "$BINFILENAME" | egrep -i "shouldStartLoadWithRequest" | tee -a "$OUTFILENAME.webview"
+otool -Iv $binaryfilename | egrep -i "des|aes|rsa|sha|md5|hash|mac|cbc|ebc|cipher|cert|random|ssl|keychain" | tee $2.crypto
+strings $1 | egrep -i "des|aes|rsa|sha|md5|hash|mac|cbc|ebc|cipher|cert|random|ssl|keychain" | tee -a $2.crypto
+# file protection
+otool -Iv $binaryfilename | egrep -i NSFileProtection | tee $2.file_protection
+strings $binaryfilename | egrep -i NSFileProtection | tee -a $2.file_protection
 # sql
-otool -Iv "$BINFILENAME" | egrep -i "sql" | tee "$OUTFILENAME.sql"
-strings "$BINFILENAME" | egrep -i "sql" | tee -a "$OUTFILENAME.sql"
+find `dirname $1`/.. -iname "*.sqlite" | tee $2.sql
+otool -Iv $binaryfilename | egrep -i sql | tee -a $2.sql
+strings $binaryfilename | egrep -i sql | tee -a $2.sql
 # sql query
-otool -Iv "$BINFILENAME" | egrep -i "select |insert |update " | tee "$OUTFILENAME.sql_query"
-strings "$BINFILENAME" | egrep -i "select |insert |update " | tee -a "$OUTFILENAME.sql_query"
+otool -Iv $binaryfilename | egrep -i "select |insert |update " | tee $2.sql_query
+strings $binaryfilename | egrep -i "select |insert |update " | tee -a $2.sql_query
+# webview
+otool -Iv $binaryfilename | egrep -i webview | tee $2.webview
+strings $binaryfilename | egrep -i webview | tee -a $2.webview
+# webview javascript
+otool -Iv $binaryfilename | egrep -i shouldStartLoadWithRequest | tee $2.webview_javascript
+strings $binaryfilename | egrep -i shouldStartLoadWithRequest | tee -a $2.webview_javascript
+# webview binary cookies
+find `dirname $1`/.. -iname Cookies.binarycookies | tee $2.webview_binary_cookies
 # URLs
-strings "$BINFILENAME" | egrep "http:\/\/|https:\/\/" | tee "$OUTFILENAME.URLs"
-# file flags
-# UNIMPLEMENTED
+strings $binaryfilename | egrep "http:\/\/|https:\/\/" | tee $2.URLs
