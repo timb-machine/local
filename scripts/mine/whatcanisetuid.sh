@@ -1,12 +1,12 @@
 #!/bin/sh
-uid="`id -u`"
-gids="`id -g` `id -G`"
-for gid in $gids
+
+gids="$(id -g) $(id -G)"
+for gid in ${gids}
 do
-	if [ -n "$gidpattern" ]
+	if [ -n "${gidpattern}" ]
 	then
-		gidpattern="$gidpattern -o"
+		gidpattern="${gidpattern} -o"
 	fi
-	gidpattern="$gidpattern ( -group $gid -perm -g+x )"
+	gidpattern="${gidpattern} ( -group ${gid} -perm -g+x )"
 done
-find / -type f -perm -u+s -a \( $gidpattern -o \( -perm -o+x \) \) -ls 2> /dev/null
+find / -type f -perm -u+s -a \( \( ${gidpattern} \) -o \( -perm -o+x \) \) -ls 2>/dev/null

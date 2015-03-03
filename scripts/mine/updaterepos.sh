@@ -1,31 +1,34 @@
 #!/bin/sh
-DIRNAME="$1"
-cwd="$PWD"
-find "$DIRNAME" -name *-trunk -type d | while read line
+
+DIRECTORYPATH="${1}"
+
+cwd="${PWD}"
+find "${DIRECTORYPATH}" -name "*-trunk" -type d | while read line
 do
-	echo "I: `basename $line`"
-	if [ -d $line/.git ]
+	printf "I: %s\n" "$(basename ${line})"
+	if [ -d "${line}/.git" ]
 	then
-		cd $line
+		cd "${line}"
 		git pull
-		cd $cwd
+		cd "${cwd}"
 	fi
-	if [ -d $line/.svn ]
+	if [ -d "${line}/.svn" ]
 	then
-		cd $line
+		cd "${line}"
+		svn upgrade
 		svn update
-		cd $cwd
+		cd "${cwd}"
 	fi
-	if [ -d $line/.hg ]
+	if [ -d "${line}/.hg" ]
 	then
-		cd $line
+		cd "${line}"
 		hg pull
-		cd $cwd
+		cd "${cwd}"
 	fi
-	if [ -d $line/CVS ]
+	if [ -d "${line}/CVS" ]
 	then
-		cd $line
+		cd "${line}"
 		cvs update
-		cd $cwd
+		cd "${cwd}"
 	fi
 done
