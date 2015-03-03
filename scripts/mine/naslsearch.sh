@@ -1,12 +1,15 @@
 #!/bin/sh
-naslpluginsdirectorypath=/opt/nessus/lib/nessus/plugins
-nasldbfilename=/usr/local/scripts/mine/naslplugins.txt
-if [ "${1}" = "update" -o ! -f "${nasldbfilename}" ]
+
+SEARCHSTRING="${1}"
+
+naslpluginsdirectorypath="/opt/nessus/lib/nessus/plugins"
+nasldbfilename="/usr/local/scripts/mine/naslplugins.txt"
+if [ "${SEARCHSTRING}" = "update" -o ! -f "${nasldbfilename}" ]
 then
 	find "${naslpluginsdirectorypath}" -type f | while read naslfilename
 	do
-		echo "$naslfilename,`grep "script_id(" "${naslfilename}" | cut -f 2 -d "(" | cut -f 1 -d ")"`"
-	done > "${nasldbfilename}"
+		printf "%s,%s", "$naslfilename" "$(grep "script_id(" "${naslfilename}" | cut -f 2 -d "(" | cut -f 1 -d ")")"
+	done >"${nasldbfilename}"
 else
-	egrep "${1}" "${nasldbfilename}"
+	egrep "${SEARCHSTRING}" "${nasldbfilename}"
 fi

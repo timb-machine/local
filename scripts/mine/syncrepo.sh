@@ -1,14 +1,14 @@
 #!/bin/sh
 
-DIRECTORYPATH="`echo "${1}"`"
+DIRECTORYPATH="$(printf "%s" "${1}")"
 REPONAME="${2}"
 
-if [ -z "`echo "${DIRECTORYPATH}" | grep "\/$"`" ]
+if [ -z "$(printf "%s" "${DIRECTORYPATH}" | grep "\/$")" ]
 then
 	DIRECTORYPATH="${DIRECTORYPATH}/"
 fi
-if [ -n "`echo "${REPONAME}" | grep "\/$"`" ]
+if [ -n "$(printf "%s" "${REPONAME}" | grep "\/$")" ]
 then
-	REPONAME="`echo "${REPONAME}" | sed "s/\/$//g"`"
+	REPONAME="$(printf "%s" "${REPONAME}" | sed "s/\/$//g")"
 fi
-echo sudo -u www-data rsync -v --progress --partial --recursive "${DIRECTORYPATH}" "rsync://timb@rsync.nth-dimension.org.uk/${REPONAME}"
+sudo -u www-data rsync -v --progress --partial --recursive "${DIRECTORYPATH}" "rsync://timb@rsync.nth-dimension.org.uk/${REPONAME}"

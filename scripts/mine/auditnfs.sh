@@ -1,102 +1,106 @@
 #!/bin/sh
-NFSHOSTNAME="$1"
-showmount -e "$1" | grep -v Export | while read sharepathname acl
+
+NFSHOSTNAME="${1}"
+
+showmount -e "${NFSHOSTNAME}" | grep -v Export | while read sharepathname acl
 do
-	mkdir /mnt/$NFSHOSTNAME
-	if [ "`echo $acl | grep anon`" != "" -o "`echo $acl | grep 0.0.0.0`" != "" -o "$acl" = "*" -o "$acl" = "(everyone)" ]
+	mkdir "/mnt/${NFSHOSTNAME}"
+	if [ "$(printf "%s" "${acl}" | grep anon)" != "" -o "$(printf "%s" "${acl}" | grep 0.0.0.0)" != "" -o "${acl}" = "*" -o "${acl}" = "(everyone)" ]
 	then
-		echo "E: $NFSHOSTNAME:$sharepathname accessible from any host"
+		printf "E: %s:%s accessible from any host\n" "${NFSHOSTNAME}" "${sharepathname}"
 	else
-		echo "I: $NFSHOSTNAME:$sharepathname accessible from $acl"
+		printf "I: %s:%s accessible from %s\n" "${NFSHOSTNAME}" "${sharepathname}" "${acl}"
 		ifconfig -a | grep "inet addr" | awk '{print $2}' | cut -f 2 -d ":" | cut -f 1-3 -d "." | while read myipaddress
 		do
-			if [ "`echo $acl | grep $myipaddress`" != "" ]
+			if [ "$(printf "%s" "${acl}" | grep "${myipaddress}")" != "" ]
 			then
-				echo "W: $NFSHOSTNAME:$sharepathname accessible from local subnet $myipaddress"
+				printf "W: %s:%s accessible from local subnet %s\n" "${NFSHOSTNAME}" "${sharepathname}" "${myipaddress}"
 			fi
 		done
 	fi
-	mount -t nfs4 -o intr,tcp,sec=krb5 $NFSHOSTNAME:$sharepathname /mnt/$NFSHOSTNAME
-	if [ "`mount | grep "/mnt/$NFSHOSTNAME"`" != "" ]
+	mount -t nfs4 -o intr,tcp,sec=krb5 "${NFSHOSTNAME}:${sharepathname}" "/mnt/${NFSHOSTNAME}"
+	if [ "$(mount | grep "/mnt/${NFSHOSTNAME}")" != "" ]
 	then
-		find /mnt/$NFSHOSTNAME -type d -perm -o+w 2> /dev/null | sed "s/\/mnt\/$NFSHOSTNAME//g" | while read directorypath
+		find "/mnt/${NFSHOSTNAME}" -type d -perm -o+w 2> /dev/null | sed "s/\/mnt\/${NFSHOSTNAME}//g" | while read directorypath
 		do
-			echo "W: $NFSHOSTNAME:$sharepathname$directorypath may be world writable"
-			tempfilename="`mktemp -u --tmpdir="/mnt/$NFSHOSTNAME$directorypath/" auditnfs.dw.XXXXXX 2>&1 | grep -v "Permission"`"
-			if [ "$tempfilename" != "" ]
+			printf "W: %s:%s may be world writable\n" "${NFSHOSTNAME}" "${sharepathname}${directorypath}"
+			tempfilename="$(mktemp -u --tmpdir="/mnt/${NFSHOSTNAME}${directorypath}/" auditnfs.dw.XXXXXX 2>&1 | grep -v "Permission")"
+			if [ "${tempfilename}" != "" ]
 			then
-				touch "$tempfilename" 2> /dev/null
-				if [ -f "$tempfilename" ]
+				touch "${tempfilename}" 2> /dev/null
+				if [ -f "${tempfilename}" ]
 				then
-					asid="`ls -la $tempfilename | awk '{print $3 ":" $4}'`"
-					rm -i "$tempfilename"
-					echo "E: $NFSHOSTNAME:$sharepathname$directorypath is world writable as $asid"
+					asid="$(ls -la "${tempfilename}" | awk '{print $3 ":" $4}')"
+					rm -i "${tempfilename}"
+					printf "E: %s:%s%s is world writable as %s\n" "${NFSHOSTNAME}" "${sharepathname}" "${directorypath}" "${asid}"
 				fi
 			fi
 		done
-		find /mnt/$NFSHOSTNAME -type d -perm -g+w 2> /dev/null | sed "s/\/mnt\/$NFSHOSTNAME//g" | while read directorypath
+		find "/mnt/${NFSHOSTNAME}" -type d -perm -g+w 2> /dev/null | sed "s/\/mnt\/${NFSHOSTNAME}//g" | while read directorypath
 		do
-			groupid="`ls -ld /mnt/$NFSHOSTNAME$directorypath | awk '{print $4}'`"
-			echo "W: $NFSHOSTNAME:$sharepathname$directorypath may be group writable by $groupid"
-			tempfilename="`mktemp -u --tmpdir="/mnt/$NFSHOSTNAME$directorypath/" auditnfs.dg.XXXXXX 2>&1 | grep -v "Permission"`"
-			/usr/local/src/become/become -r 65533:$groupid "touch $tempfilename" > /dev/null 2>&1
-			if [ "$tempfilename" != "" ]
+			gid="$(ls -ld "/mnt/${NFSHOSTNAME}${directorypath}" | awk '{print $4}')"
+			printf "W: %s:%s%s may be group writable by %s\n" "${NFSHOSTNAME}" "${sharepathname}" "${directorypath}" "%{gid}"
+			tempfilename="$(mktemp -u --tmpdir="/mnt/${NFSHOSTNAME}${directorypath}/" auditnfs.dg.XXXXXX 2>&1 | grep -v "Permission")"
+			/usr/local/src/become/become -r "65533:${gid}" "touch \"$tempfilename\"" >/dev/null 2>&1
+			if [ "${tempfilename}" != "" ]
 			then
-				if [ -f "$tempfilename" ]
+				true
+				if [ -f "${tempfilename}" ]
 				then
-					asid="`ls -la $tempfilename | awk '{print $3 ":" $4}'`"
-					/usr/local/src/become/become -r 65533:$groupid "rm -i $tempfilename" > /dev/null 2>&1
-					echo "E: $NFSHOSTNAME:$sharepathname$directorypath is group writable by $groupid as $asid"
+					true
+					asid="$(ls -la "${tempfilename}" | awk '{print $3 ":" $4}')"
+					/usr/local/src/become/become -r "65533:${gid}" "rm -i \"${tempfilename}\"" > /dev/null 2>&1
+					printf "E: %s:%s%s is group writable by %s as %s\n" "${NFSHOSTNAME}" "${sharepathname}" "${directorypath}" "${gid}" "${asid}"
 				fi
 			fi
 		done
-		find /mnt/$NFSHOSTNAME -type d -perm -u+w 2> /dev/null | sed "s/\/mnt\/$NFSHOSTNAME//g" | while read directorypath
+		find "/mnt/${NFSHOSTNAME}" -type d -perm -u+w 2> /dev/null | sed "s/\/mnt\/${NFSHOSTNAME}//g" | while read directorypath
 		do
-			userid="`ls -ld /mnt/$NFSHOSTNAME$directorypath | awk '{print $3}'`"
-			echo "W: $NFSHOSTNAME:$sharepathname$directorypath may be user writable by $userid"
-			tempfilename="`mktemp -u --tmpdir="/mnt/$NFSHOSTNAME$directorypath/" auditnfs.du.XXXXXX 2>&1 | grep -v "Permission"`"
+			uid="$(ls -ld "/mnt/${NFSHOSTNAME}${directorypath}" | awk '{print $3}')"
+			printf "W: %s:%s%s may be user writable by %s\n" "${NFSHOSTNAME}" "${sharepathname}" "${directorypath}" "${uid}"
+			tempfilename="$(mktemp -u --tmpdir="/mnt/${NFSHOSTNAME}$directorypath/" auditnfs.du.XXXXXX 2>&1 | grep -v "Permission")"
 			if [ "$tempfilename" != "" ]
 			then
-				/usr/local/src/become/become -r $userid:65533 "touch $tempfilename" > /dev/null 2>&1
-				if [ -f "$tempfilename" ]
+				/usr/local/src/become/become -r "${uid}:65533" "touch \"${tempfilename}\"" >/dev/null 2>&1
+				if [ -f "${tempfilename}" ]
 				then
-					asid="`ls -la $tempfilename | awk '{print $3 ":" $4}'`"
-					/usr/local/src/become/become -r 65533:$groupid "chmod u+xs $tempfilename" > /dev/null 2>&1
-					echo "E: $NFSHOSTNAME:$sharepathname$directorypath is user writable by $userid as $asid"
+					asid="$(ls -la "${tempfilename}" | awk '{print $3 ":" $4}')"
+					/usr/local/src/become/become -r "65533:${gid}" "chmod u+xs \"${tempfilename}\"" > /dev/null 2>&1
+					printf "E: %s:%s%s is user writable by %s as %s\n" "${NFSHOSTNAME}" "${sharepathname}" "${directorypath}" "${uid}" "${asid}"
 				fi
 			fi
 		done
-		find /mnt/$NFSHOSTNAME -type f -perm -o+w 2> /dev/null | sed "s/\/mnt\/$NFSHOSTNAME//g" | while read filename
+		find "/mnt/${NFSHOSTNAME}" -type f -perm -o+w 2>/dev/null | sed "s/\/mnt\/${NFSHOSTNAME}//g" | while read filename
 		do
-			echo "W: $NFSHOSTNAME:$sharepathname$filename may be world writable"
+			printf "W: %s:%s%s may be world writable\n" "${NFSHOSTNAME}" "${sharepathname}" "${filename}"
 		done
-		find /mnt/$NFSHOSTNAME -type f -perm -g+w 2> /dev/null | sed "s/\/mnt\/$NFSHOSTNAME//g" | while read filename
+		find "/mnt/${NFSHOSTNAME}" -type f -perm -g+w 2>/dev/null | sed "s/\/mnt\/${NFSHOSTNAME}//g" | while read filename
 		do
-			groupid="`ls -ld /mnt/$NFSHOSTNAME$filename | awk '{print $4}'`"
-			echo "W: $NFSHOSTNAME:$sharepathname$filename may be group writable by $groupid"
+			gid="$(ls -ld "/mnt/${NFSHOSTNAME}${filename}" | awk '{print $4}')"
+			printf "W: %s:%s:%s may be group writable by %s\n" "${NFSHOSTNAME}" "${sharepathname}" "${filename}" "${gid}"
 		done
-		find /mnt/$NFSHOSTNAME -type f -perm -u+w 2> /dev/null | sed "s/\/mnt\/$NFSHOSTNAME//g" | while read filename
+		find "/mnt/${NFSHOSTNAME}" -type f -perm -u+w 2> /dev/null | sed "s/\/mnt\/${NFSHOSTNAME}//g" | while read filename
 		do
-			userid="`ls -ld /mnt/$NFSHOSTNAME$filename | awk '{print $3}'`"
-			echo "W: $NFSHOSTNAME:$sharepathname$filename may be user writable by $userid"
+			uid="$(ls -ld "/mnt/${NFSHOSTNAME}${filename}" | awk '{print $3}')"
+			printf "W: %s:%s%s may be user writable by %s\n" "${NFSHOSTNAME}" "${sharepathname}" "${filename}" "${uid}"
 		done
-		find /mnt/$NFSHOSTNAME -type f -perm -o+r \( -name shadow -o -name passwd -name hosts.equiv -o -name shosts.equiv -o -name id_dsa -o -name id_rsa -o -name .rhosts -o -name .shosts \) 2> /dev/null | sed "s/\/mnt\/$NFSHOSTNAME//g" | while read filename
+		find "/mnt/${NFSHOSTNAME}" -type f -perm -o+r \( -name shadow -o -name passwd -name hosts.equiv -o -name shosts.equiv -o -name id_dsa -o -name id_rsa -o -name .rhosts -o -name .shosts \) 2> /dev/null | sed "s/\/mnt\/${NFSHOSTNAME}//g" | while read filename
 		do
-			echo "W: $NFSHOSTNAME:$sharepathname$filename is world readable"
+			printf "W: %s%s%s is world readable by %s\n" "${NFSHOSTNAME}" "${sharepathname}" "${filename}"
 		done
-		find /mnt/$NFSHOSTNAME -type f -perm -g+r \( -name shadow -o -name passwd -name hosts.equiv -o -name shosts.equiv -o -name id_dsa -o -name id_rsa -o -name .rhosts -o -name .shosts \) 2> /dev/null | sed "s/\/mnt\/$NFSHOSTNAME//g" | while read filename
+		find /mnt/${NFSHOSTNAME} -type f -perm -g+r \( -name shadow -o -name passwd -name hosts.equiv -o -name shosts.equiv -o -name id_dsa -o -name id_rsa -o -name .rhosts -o -name .shosts \) 2> /dev/null | sed "s/\/mnt\/${NFSHOSTNAME}//g" | while read filename
 		do
-			groupid="`ls -ld /mnt/$NFSHOSTNAME$filename | awk '{print $4}'`"
-			echo "W: $NFSHOSTNAME:$sharepathname$filename is group readable by $groupid"
+			gid="$(ls -ld "/mnt/${NFSHOSTNAME}${filename}" | awk '{print $4}')"
+			printf "W: %s%s%s is group readable by %s\n" "${NFSHOSTNAME}" "${sharepathname}" "${filename}" "${gid}"
 		done
-		find /mnt/$NFSHOSTNAME -type f -perm -u+r \( -name shadow -o -name passwd -name hosts.equiv -o -name shosts.equiv -o -name id_dsa -o -name id_rsa -o -name .rhosts -o -name .shosts \) 2> /dev/null | sed "s/\/mnt\/$NFSHOSTNAME//g" | while read filename
+		find /mnt/${NFSHOSTNAME} -type f -perm -u+r \( -name shadow -o -name passwd -name hosts.equiv -o -name shosts.equiv -o -name id_dsa -o -name id_rsa -o -name .rhosts -o -name .shosts \) 2> /dev/null | sed "s/\/mnt\/${NFSHOSTNAME}//g" | while read filename
 		do
-			userid="`ls -ld /mnt/$NFSHOSTNAME$filename | awk '{print $3}'`"
-			echo "W: $NFSHOSTNAME:$sharepathname$filename is user readable by $userid"
+			uid="$(ls -ld "/mnt/${NFSHOSTNAME}${filename}" | awk '{print $3}')"
+			printf "W: %s%s%s is user readable by %s\n" "${NFSHOSTNAME}" "${sharepathname}" "${filename}" "${uid}"
 		done
-		umount /mnt/$NFSHOSTNAME
+		umount "/mnt/${NFSHOSTNAME}"
 	fi
-	rmdir /mnt/$NFSHOSTNAME
+	rmdir "/mnt/${NFSHOSTNAME}"
 done
-echo "I: I wonder what it's mounted as on the server side, nodev, setuid???"
-echo "I: You could also try hardlinking other files on the same partition in?"
+printf "I: I wonder what it's mounted as on the server side, nodev, setuid???\n"
+printf "I: You could also try hardlinking other files on the same partition in?\n"

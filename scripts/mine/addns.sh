@@ -1,67 +1,70 @@
 #!/bin/sh
-DOMAIN="$1"
-DNSSERVER="$2"
-if [ -z "$DOMAIN" ]
-then
-	printf "extracting DNS domain\n"
-	DOMAIN="`dig +short "@$DNSSERVER" soa 255.in-addr.arpa | awk '{print $1}' | cut -f 2- -d"."`"
-	printf "domain is: $DOMAIN\n"
-fi
+
+DOMAINNAME="${1}"
+DNSSERVER="${2}"
+
 sites() {
-	domain="$1"
-	dnsserver="$2"
-	for i in _sites
+	domainname="${1}"
+	dnsserver="${2}"
+	for businessunit in _sites
 	do
-		for j in Default-First-Site-Name
+		for defaultzone in Default-First-Site-Name
 		do
-			for k in _tcp _udp
+			for serviceprotocol in _tcp _udp
 			do
-				for l in _gc _kerberos _ldap _kpasswd
+				for servicename in _gc _kerberos _ldap _kpasswd _autodiscover
 				do
-					printf "$l.$k.$j.$i.$domain in "
-					result="`dig +short srv "$l.$k.$j.$i.$DOMAIN" "@$dnsserver"`"
-						if [ -z "$result" ]
+					printf "I: %s in " "${servicename}.${serviceprotocol}.${defaultzone}.${businessunit}.${domainname}"
+					result="$(dig +short srv "${servicename}.${serviceprotocol}.${defaultzone}.${businessunit}.${domainname}" "@${dnsserver}")"
+					if [ -z "${result}" ]
 					then
 						printf "UNKNOWN\n"
 					else
-						printf "$result\n"
+						printf "%s\n" "${result}"
 					fi
 				done
 			done
 		done
 	done
 }
-for x in _tcp _udp
+
+if [ -z "${DOMAINNAME}" ]
+then
+	printf "extracting DNS domain\n"
+	DOMAINNAME="$(dig +short "@${DNSSERVER}" soa 255.in-addr.arpa | cut -f 1 -d " " | cut -f 2- -d ".")"
+	printf "domain is: %s\n" "${DOMAINNAME}"
+fi
+for serviceprotocol in _tcp _udp
 do
-	for y in _gc _kerberos _ldap _kpasswd
+	for servicename in _gc _kerberos _ldap _kpasswd _autodiscover
 	do
-		printf "$y.$x.$DOMAIN in "
-		result="`dig +short srv "$y.$x.$DOMAIN" "@$DNSSERVER"`"
-		if [ -z "$result" ]
+		printf "I: %s in " "${servicename}.${serviceprotocol}.${DOMAINNAME}"
+		result="$(dig +short srv "${servicename}.${serviceprotocol}.${DOMAINNAME}" "@${DNSSERVER}")"
+		if [ -z "${result}" ]
 		then
 			printf "UNKNOWN\n"
 		else
-			printf "$result\n"
+			printf "%s\n" "${result}"
 		fi
 	done
 done
-sites "$DOMAIN" "$DNSSERVER"
-for x in _msdcs
+sites "${DOMAINNAME}" "${DNSSERVER}"
+for adzone in _msdcs
 do
-	for y in dc domains gc pdc
+	for systemtype in dc domains gc pdc
 	do
-		sites "$y.$x.$DOMAIN" "$DNSSERVER"
-		for z in _tcp _udp
+		sites "${systemtype}.${adzone}.${DOMAINNAME}" "${DNSSERVER}"
+		for serviceprotocol in _tcp _udp
 		do
-			for a in _gc _kerberos _ldap _kpasswd
+			for servicename in _gc _kerberos _ldap _kpasswd _autodiscover
 			do
-				printf "$a.$z.$y.$x.$DOMAIN in "
-				result="`dig +short srv "$a.$z.$y.$x.$DOMAIN" "@$DNSSERVER"`"
-				if [ -z "$result" ]
+				printf "I: %s in " "${servicename}.${serviceprotocol}.${systemtype}.${adzone}.${DOMAINNAME}"
+				result="$(dig +short srv "${servicename}.${serviceprotocol}.${systemtype}.${adzone}.${DOMAINNAME}" "@${DNSSERVER}")"
+				if [ -z "${result}" ]
 				then
 					printf "UNKNOWN\n"
 				else
-					printf "$result\n"
+					printf "%s\n" "${result}"
 				fi
 			done
 		done
