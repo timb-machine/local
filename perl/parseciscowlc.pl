@@ -125,21 +125,21 @@ while (<>) {
 	}
 	if ($_ =~ /^Cisco AP Name\.+ (.*)$/) {
 		# Yay, we have physical tin
-		$ap = $1;
+		$apname = $1;
 		$iosversion = "";
-		$ssh = 1;
-		$telnet = 1;
-		$vlan = -1;
+		$sshflag = 1;
+		$telnetflag = 1;
+		$vlanid = -1;
 		while (<>) {
 			$_ =~ s/\x0a//g;
 			$_ =~ s/\x0d//g;
 			# TODO the second if clause is a bit of a hack, no idea what happens if the order of output is different
 			if (($_ =~ /^Cisco AP Identifier.*$/) || ($_ =~ /^AP Airewave Director Configuration$/)) {
-				print "AP " . $ap . ":";
+				print "AP " . $apname . ":";
 				print "IOS version " . $iosversion . ":";
-				($sshenabled == 0) && print "no SSH:";
-				($telnetenabled == 1) && print "telnet:";
-				($vlan != -1) && print "VLAN " . $vlan . ":";
+				($sshflagenabled == 0) && print "no SSH:";
+				($telnetflagenabled == 1) && print "telnet:";
+				($vlanid != -1) && print "VLAN " . $vlanid . ":";
 				print "\n";
 				goto start;
 			}
@@ -147,14 +147,14 @@ while (<>) {
 				$iosversion = $1;
 			}
 			if ($_ =~ /^Ssh State\.+ Disabled/) {
-				$ssh = 0;
+				$sshflag = 0;
 			}
 			if ($_ =~ /^Telnet State\.+ Enabled/) {
-				$telnet = 0;
+				$telnetflag = 0;
 			}
 			if ($_ =~ /Vlan :\.+ (\d+)/) {
 				# TODO i need to understand how VLANs (et al) work on the mesh
-				$vlan = $1;
+				$vlanid = $1;
 			}
 			# TODO there are doubtless other settings that matter, this is just a start
 		}
@@ -162,41 +162,41 @@ while (<>) {
 	if ($_ =~ /^Network Name \(SSID\)\.+ (.*)$/) {
 		# Yay, we have an AP defined
 		$essid = $1;
-		$enabled = 0;
-		$macfiltering = 0;
+		$enabledflag = 0;
+		$macfilteringflag = 0;
 		$broadcastessid = 0;
-		$peertopeer = 1;
-		$localeap = 1;
-		$openap = 0;
-		$staticwep = 0;
-		$dot1x = 1;
-		$wpa = 1;
-		$tkip = 0;
-		$aes = 1;
-		$dot1xauth = 1;
-		$psk = 0;
-		$web = 0;
+		$peertopeerflag = 1;
+		$localeapflag = 1;
+		$openapflag = 0;
+		$staticwepflag = 0;
+		$dot1xflag = 1;
+		$wpaflag = 1;
+		$tkipflag = 0;
+		$aesflag = 1;
+		$dot1xauthflag = 1;
+		$pskflag = 0;
+		$webflag = 0;
 		while (<>) {
 			$_ =~ s/\x0a//g;
 			$_ =~ s/\x0d//g;
 			if (($_ =~ /^WLAN Identifier.*$/) || ($_ =~ /^ACL Configuration$/)) {
 				# TODO this is a bit of a hack, no idea what happens if the order of output is different
-				if ($enabled == 1) {
+				if ($enabledflag == 1) {
 					# Lets dump some shit
 					print "ESSID " . $essid . " enabled:";
-					($macfiltering == 0) && print "no MAC filtering:";
+					($macfilteringflag == 0) && print "no MAC filtering:";
 					($broadcastessid == 1) && print "ESSID broadcast:";
-					($peertopeer == 1) && print "no link layer segregation:";
-					($localeap == 0) && print "local eap disabled:";
-					($openap == 1) && print "open AP:";
-					($staticwep == 1) && print "static WEP:";
-					($dot1x == 0) && print "no dot.1X:";
-					($wpa == 0) && print "no wpa/wpa2:";
-					($tkip == 1) && print "tkip:";
-					($aes == 0) && print "no aes:";
-					($dot1xauth == 0) && print "no dot.1X auth:";
-					($psk == 1) && print "psk:";
-					($web == 1) && print "web:";
+					($peertopeerflag == 1) && print "no link layer segregation:";
+					($localeapflag == 0) && print "local eap disabled:";
+					($openapflag == 1) && print "open AP:";
+					($staticwepflag == 1) && print "static WEP:";
+					($dot1xflag == 0) && print "no dot.1X:";
+					($wpaflag == 0) && print "no wpaflag/wpaflag2:";
+					($tkipflag == 1) && print "tkipflag:";
+					($aesflag == 0) && print "no aesflag:";
+					($dot1xauthflag == 0) && print "no dot.1X auth:";
+					($pskflag == 1) && print "pskflag:";
+					($webflag == 1) && print "webflag:";
 					print "\n";
 				} else {
 					print "ESSID " . $essid . " disabled\n";
@@ -204,10 +204,10 @@ while (<>) {
 				goto start;
 			}
 			if ($_ =~ /^Status\.+ Enabled$/) {
-				$enabled = 1;
+				$enabledflag = 1;
 			}
 			if ($_ =~ /^MAC Filtering\.+ Enabled$/) {
-				$macfiltering = 1;
+				$macfilteringflag = 1;
 			}
 			if ($_ =~ /^Broadcast SSID\.+ Enabled$/) {
 				$broadcastessid = 1;
@@ -216,37 +216,37 @@ while (<>) {
 				$broadcastessid = 1;
 			}
 			if ($_ =~ /^Peer-to-Peer Blocking Action\.+ Disabled$/) {
-				$peertopeer = 0;
+				$peertopeerflag = 0;
 			}
 			if ($_ =~ /^Local EAP Authentication\.+ Disabled$/) {
-				$localeap = 0;
+				$localeapflag = 0;
 			}
 			if ($_ =~ /^.*802.11 Authentication:\.+ Open System$/) {
-				$openap = 1;
+				$openapflag = 1;
 			}
 			if ($_ =~ /^.*Static WEP Keys\.+ Enabled$/) {
-				$staticwep = 1;
+				$staticwepflag = 1;
 			}
 			if ($_ =~ /^.*802.1X\.+ Disabled$/) {
-				$dot1x = 0;
+				$dot1xflag = 0;
 			}
 			if ($_ =~ /^.*Wi-Fi Protected Access (WPA\/WPA2)\.+ Disabled$/) {
-				$wpa = 0;
+				$wpaflag = 0;
 			}
 			if ($_ =~ /^.*TKIP Cipher\.+ Enabled$/) {
-				$tkip = 1;
+				$tkipflag = 1;
 			}
 			if ($_ =~ /^.*AES Cipher\.+ Disabled$/) {
-				$aes = 0;
+				$aesflag = 0;
 			}
 			if ($_ =~ /^.*dot.1x\.+ Disabled$/) {
-				$dot1xauth = 0;
+				$dot1xauthflag = 0;
 			}
 			if ($_ =~ /^.*PSK\.+ Enabled$/) {
-				$psk = 1;
+				$pskflag = 1;
 			}
 			if ($_ =~ /^.*Web Based Authentication\.+ Enabled$/) {
-				$web = 1;
+				$webflag = 1;
 			}
 			# TODO there are doubtless other settings that matter, this is just a start
 		}
