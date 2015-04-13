@@ -137,8 +137,8 @@ while (<>) {
 			if (($_ =~ /^Cisco AP Identifier.*$/) || ($_ =~ /^AP Airewave Director Configuration$/)) {
 				print "AP " . $apname . ":";
 				print "IOS version " . $iosversion . ":";
-				($sshflagenabled == 0) && print "no SSH:";
-				($telnetflagenabled == 1) && print "telnet:";
+				($sshflag == 0) && print "no SSH:";
+				($telnetflag == 1) && print "telnet:";
 				($vlanid != -1) && print "VLAN " . $vlanid . ":";
 				print "\n";
 				goto start;
