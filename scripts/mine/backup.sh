@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 read -s -p "Password: " password
 hostname="10.10.10.2"
