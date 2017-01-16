@@ -1,3 +1,3 @@
 #!/bin/sh
 
-script -c "${*}" "/root/${1}.$(date +%Y%m%d%H%M)"
+script -c "echo ${*} && ${*}" "${HOME}/${1}.$(date +%Y%m%d%H%M%S)"
