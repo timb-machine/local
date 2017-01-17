@@ -13,6 +13,7 @@ changeurgency="medium"
 packagepriority="$(ar -p "${FILENAME}" control.tar.gz | tar zxvfO - ./control 2>/dev/null | grep "Priority: " | awk '{print $2}')"
 emailaddress="$(ar -p "${FILENAME}" control.tar.gz | tar zxvfO - ./control 2>/dev/null | grep "Maintainer: " | awk '{print $2}')"
 packagedescription="$(ar -p "${FILENAME}" control.tar.gz | tar zxvfO - ./control 2>/dev/null | grep "Description: " | awk '{print $2}')"
+packagesection="$(ar -p "${FILENAME}" control.tar.gz | tar zxvfO - ./control 2>/dev/null | grep "Section: " | awk '{print $2}')"
 cat | gpg --clearsign --local-user "${emailaddress}" > "${changefilename}.changes" << EOF
 Format: 1.8
 Date: $(date -R)
@@ -35,5 +36,5 @@ Checksums-Sha1:
 Checksums-Sha256:
  $(sha256sum "${FILENAME}" | cut -f 1 -d " ") $(du -b "${FILENAME}" | tr "\t" " " | cut -f 1 -d " ") ${FILENAME}
 Files:
- $(md5sum "${FILENAME}" | cut -f 1 -d " ") $(du -b "${FILENAME}" | tr "\t" " " | cut -f 1 -d " ") contrib/admin ${packagepriority} ${FILENAME}
+ $(md5sum "${FILENAME}" | cut -f 1 -d " ") $(du -b "${FILENAME}" | tr "\t" " " | cut -f 1 -d " ") ${packagesection} ${packagepriority} ${FILENAME}
 EOF
