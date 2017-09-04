@@ -3,13 +3,13 @@
 DEFPWFILENAME="${1}"
 PRIVDEFPWFILENAME="${2}"
 
-tempfilename="$(tempfile)"
+tempfilename="$(mktemp -u defpwsplit.XXXXXX)"
 cat "${DEFPWFILENAME}" "${PRIVDEFPWFILENAME}" | sort | uniq | sed "s/\/\//\//g" >"${tempfilename}"
 for indexcharacter in A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
 do
 	printf "====== Passwords: %s ======\n" "${indexcharacter}" >"${tempfilename}_${indexcharacter}.txt"
 	printf "\n" >>"${tempfilename}_${indexcharacter}.txt"
-	printf "^ Vendor Device/Application ^ Access ^ Username ^ Password ^\n" >>"${{tempfilename}}_${indexcharacter}.txt"
+	printf "^ Vendor Device/Application ^ Access ^ Username ^ Password ^\n" >>"${tempfilename}_${indexcharacter}.txt"
 	grep "^| ${indexcharacter}" "${tempfilename}" >>"${tempfilename}_${indexcharacter}.txt"
 	printf "\n" >>"${tempfilename}_${indexcharacter}.txt"
 	printf "{{tag>Default Passwords}}\n" >>"${tempfilename}_${indexcharacter}.txt"
