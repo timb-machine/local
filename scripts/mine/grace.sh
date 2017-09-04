@@ -2,7 +2,7 @@
 
 BINFILENAME="${1}"
 
-tempfilename="$(tempfile)"
+tempfilename="$(mktemp -u grace.XXXXXX)"
 printf "set pagination off" >"${tempfilename}"
 # | grep ":$" | grep -v "\." | cut -f 2 -d "<" | cut -f 1 -d ">" | cut -f 1 -d "@"
 # | grep "@plt" | cut -f 2 -d "<" | cut -f 1 -d "@"
