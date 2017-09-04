@@ -5,7 +5,7 @@ DIRECTORYPATH="${1}"
 cwd="${PWD}"
 find "${DIRECTORYPATH}" -name "*-trunk" -type d | while read line
 do
-	printf "I: %s\n" "$(basename ${line})"
+	printf "I: %s\n" "$(basename "${line}")"
 	if [ -d "${line}/.git" ]
 	then
 		cd "${line}"
