@@ -47,7 +47,8 @@ zones() {
 
 if [ -z "${DOMAINNAME}" ]
 then
-	printf "extracting DNS domain\n"
+    printf "extracting DNS domain\n"
+	# TODO if we have a DNS sever name, we should probably try walking DNS tree to see if any parent domains are AD
 	DOMAINNAME="$(dig +short "@${DNSSERVER}" soa 255.in-addr.arpa | cut -f 1 -d " " | cut -f 2- -d ".")"
 	printf "domain is: %s\n" "${DOMAINNAME}"
 fi
