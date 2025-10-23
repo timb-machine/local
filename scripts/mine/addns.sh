@@ -28,6 +28,15 @@ sites() {
 	done
 }
 
+zones() {
+	domainname="${1}"
+	dnsserver="${2}"
+	for zonename in DomainDnsZones ForestDnsZones
+	do
+		sites "${zonename}.${domainname}" "${domainname}"
+	done
+}
+
 if [ -z "${DOMAINNAME}" ]
 then
 	printf "extracting DNS domain\n"
@@ -49,6 +58,7 @@ do
 	done
 done
 sites "${DOMAINNAME}" "${DNSSERVER}"
+zones "${DOMAINNAME}" "${DNSSERVER}"
 for adzone in _msdcs
 do
 	for systemtype in dc domains gc pdc
