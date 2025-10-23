@@ -33,6 +33,14 @@ zones() {
 	dnsserver="${2}"
 	for zonename in DomainDnsZones ForestDnsZones
 	do
+		printf "I: %s in " "${zonename}.${domainname}"
+		result="$(dig +short any "${zonename}.${domainname}" "@${DNSSERVER}")"
+		if [ -z "${result}" ]
+		then
+			printf "UNKNOWN\n"
+		else
+			printf "%s\n" "${result}"
+		fi		
 		sites "${zonename}.${domainname}" "${domainname}"
 	done
 }
